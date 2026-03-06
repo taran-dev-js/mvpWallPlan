@@ -132,7 +132,7 @@
     <div class="fur-list" id="furList"></div>
   </div>
   <div class="divider"></div>
-  <div>
+  <!-- <div>
     <div class="sec-label">📊 Статистика</div>
     <div class="stats">
       <div class="stat"><div class="sv" id="sCount">0</div><div class="sl">ЕЛЕМЕНТІВ</div></div>
@@ -140,7 +140,7 @@
       <div class="stat"><div class="sv" id="sFurA">0</div><div class="sl">ДМ² МЕБЛІВ</div></div>
       <div class="stat"><div class="sv" id="sWallA">0</div><div class="sl">ДМ² СТІНИ</div></div>
     </div>
-  </div>
+  </div> -->
 </aside>
 
 <main class="canvas-area">
@@ -397,9 +397,10 @@ function updateStats() {
 window.addEventListener('load', () => {
   initWall();
   items = [
-    {id:idN++,name:'Шафа',w:800,h:2000,x:0,y:400,color:COLORS[0]},
-    {id:idN++,name:'Комод',w:1200,h:900,x:900,y:1500,color:COLORS[2]},
-    {id:idN++,name:'Антресоль',w:1200,h:400,x:900,y:0,color:COLORS[4]},
+       {id:idN++,name:'Шафа',w:1600,h:600,x:0,y:0,color:COLORS[0]},
+    {id:idN++,name:'Комод',w:1200,h:900,x:0,y:700,color:COLORS[2]},
+    {id:idN++,name:'Полиця',w:4000,h:100,x:0,y:1600,color:COLORS[4]},
+    {id:idN++,name:'Полиця',w:4000,h:100,x:0,y:600,color:COLORS[4]},
   ];
   renderAll(); renderList(); updateStats();
   setTimeout(() => { applyLayout(); renderAll(); }, 80);
