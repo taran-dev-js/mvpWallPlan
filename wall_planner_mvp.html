@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WallPlan — Планувальник стінки</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f11; --surface: #18181c; --surface2: #222228;
+    --border: #2e2e38; --accent: #e8ff47; --text: #f0f0f5; --muted: #707088;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .logo { font-size: 20px; font-weight: 800; } .logo span { color: var(--accent); }
+  .badge { font-family: 'DM Mono', monospace; font-size: 11px; background: var(--accent); color: #0f0f11; padding: 3px 10px; border-radius: 20px; }
+  .app { display: grid; grid-template-columns: 300px 1fr; flex: 1; }
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 22px; overflow-y: auto; }
+  .sec-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+  .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .field input { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 8px 11px; outline: none; transition: border-color 0.2s; width: 100%; }
+  .field input:focus { border-color: var(--accent); }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 16px; border-radius: 8px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.18s; width: 100%; }
+  .btn-primary { background: var(--accent); color: #0f0f11; }
+  .btn-primary:hover { background: #d4eb2a; transform: translateY(-1px); }
+  .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .divider { height: 1px; background: var(--border); margin: 0 -20px; }
+  .fur-list { display: flex; flex-direction: column; gap: 7px; max-height: 200px; overflow-y: auto; }
+  .fur-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.15s; }
+  .fur-item:hover, .fur-item.sel { border-color: var(--accent); }
+  .fur-item.sel { background: #e8ff471a; }
+  .fi-dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
+  .fi-name { font-size: 13px; font-weight: 600; }
+  .fi-dim { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .del-btn { background: none; border: none; color: #ff5555; cursor: pointer; font-size: 14px; padding: 2px 5px; border-radius: 4px; }
+  .del-btn:hover { background: #ff555520; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+  .sv { font-size: 20px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .sl { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .color-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 5px; }
+  .csw { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+  .csw:hover { transform: scale(1.2); }
+  .csw.active { border-color: #fff; box-shadow: 0 0 0 2px #fff3; }
+  .canvas-area { display: flex; flex-direction: column; background: var(--bg); padding: 24px; gap: 14px; overflow: hidden; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .hint { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .hint b { color: var(--text); }
+  .zc { display: flex; gap: 5px; align-items: center; }
+  .zb { background: var(--surface); border: 1px solid var(--border); color: var(--text); width: 30px; height: 30px; border-radius: 6px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .zb:hover { border-color: var(--accent); color: var(--accent); }
+  .zlabel { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); min-width: 38px; text-align: center; }
+  .info-bar { display: none; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-family: 'DM Mono', monospace; font-size: 12px; }
+  .info-bar.vis { display: flex; }
+  .ib-name { font-weight: 700; font-family: 'Syne', sans-serif; font-size: 14px; }
+  .ib-pos { color: var(--muted); } .ib-pos b { color: var(--accent); }
+  .ib-actions { margin-left: auto; display: flex; gap: 7px; }
+  .rot-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 5px 10px; font-size: 11px; cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.15s; }
+  .rot-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .delbig { background: none; border: 1px solid #ff444440; color: #ff4444; border-radius: 6px; padding: 5px 10px; font-size: 11px; cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.15s; }
+  .delbig:hover { background: #ff444420; }
+  .canvas-wrap { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at 20% 80%, #e8ff4706 0%, transparent 50%), radial-gradient(circle at 80% 20%, #ff6b3506 0%, transparent 50%); }
+  .ruler-cont { display: inline-flex; flex-direction: column; }
+  .ruler-row { display: flex; }
+  #wall { background: #1a1a20; border: 2px solid var(--border); border-radius: 3px; position: relative; overflow: hidden; box-shadow: 0 0 50px #000a; }
+  #wall.grid { background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px); background-size: 20px 20px; }
+  .fb { position: absolute; border-radius: 4px; cursor: grab; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 10px; overflow: hidden; transition: box-shadow 0.12s; }
+  .fb:active { cursor: grabbing; }
+  .fb.sel { outline: 2px solid var(--accent); box-shadow: 0 0 0 4px #e8ff4725; z-index: 100 !important; }
+  .fb-stripe { position: absolute; inset: 0; opacity: 0.07; background-image: repeating-linear-gradient(45deg,#fff,#fff 1px,transparent 1px,transparent 9px); }
+  .fb-lbl { font-weight: 500; text-align: center; padding: 1px 4px; color: #fff; text-shadow: 0 1px 3px #0009; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
+  .fb-dim { font-size: 9px; opacity: 0.65; color: #fff; text-shadow: 0 1px 2px #0006; }
+  .rh-wrap { width: 14px; height: 14px; position: absolute; right: 2px; bottom: 2px; cursor: se-resize; opacity: 0; transition: opacity 0.15s; }
+  .fb:hover .rh-wrap, .fb.sel .rh-wrap { opacity: 1; }
+  .rh-wrap::before, .rh-wrap::after { content: ''; position: absolute; background: #fffc; border-radius: 1px; }
+  .rh-wrap::before { right: 0; bottom: 4px; width: 100%; height: 1.5px; }
+  .rh-wrap::after { right: 4px; bottom: 0; width: 1.5px; height: 100%; }
+  .empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; transition: opacity 0.3s; }
+  .empty.gone { opacity: 0; }
+  .empty-icon { font-size: 36px; opacity: 0.18; }
+  .empty-txt { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.8; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .chk-row { display: flex; gap: 14px; align-items: center; }
+  .chk-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  input[type=checkbox] { accent-color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Wall<span>Plan</span></div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)" id="hdims">—</span>
+    <div class="badge">MVP</div>
+  </div>
+</header>
+
+<div class="app">
+<aside class="sidebar">
+  <div>
+    <div class="sec-label">📐 Розмір стіни</div>
+    <div class="field-group">
+      <div class="field"><label>Ширина (мм)</label><input type="number" id="wW" value="4000" min="500" max="12000" step="100"></div>
+      <div class="field"><label>Висота (мм)</label><input type="number" id="wH" value="2400" min="500" max="5000" step="100"></div>
+    </div>
+    <button class="btn btn-primary" onclick="initWall()" style="margin-top:10px">↺ Оновити</button>
+  </div>
+  <div class="divider"></div>
+  <div>
+    <div class="sec-label">🪑 Новий елемент</div>
+    <div class="field" style="margin-bottom:8px"><label>Назва</label><input type="text" id="fname" placeholder="Шафа, Стелаж..."></div>
+    <div class="field-group">
+      <div class="field"><label>Ширина (мм)</label><input type="number" id="fw" value="600" min="50" step="50"></div>
+      <div class="field"><label>Висота (мм)</label><input type="number" id="fh" value="800" min="50" step="50"></div>
+    </div>
+    <div class="field" style="margin:8px 0">
+      <label>Відступ від підлоги (мм)</label>
+      <input type="number" id="foff" value="0" min="0" step="50">
+    </div>
+    <div class="field">
+      <label>Колір</label>
+      <div class="color-row" id="colorRow"></div>
+    </div>
+    <button class="btn btn-secondary" onclick="addItem()" style="margin-top:10px">+ Додати елемент</button>
+  </div>
+  <div class="divider"></div>
+  <div style="flex:1;min-height:0">
+    <div class="sec-label">📦 Список (<span id="cnt">0</span>)</div>
+    <div class="fur-list" id="furList"></div>
+  </div>
+  <div class="divider"></div>
+  <div>
+    <div class="sec-label">📊 Статистика</div>
+    <div class="stats">
+      <div class="stat"><div class="sv" id="sCount">0</div><div class="sl">ЕЛЕМЕНТІВ</div></div>
+      <div class="stat"><div class="sv" id="sFill">0%</div><div class="sl">ЗАПОВНЕНО</div></div>
+      <div class="stat"><div class="sv" id="sFurA">0</div><div class="sl">ДМ² МЕБЛІВ</div></div>
+      <div class="stat"><div class="sv" id="sWallA">0</div><div class="sl">ДМ² СТІНИ</div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="canvas-area">
+  <div class="toolbar">
+    <span class="hint">Тягніть · <b>Клік</b> виділити · <b>R</b> повернути · <b>Del</b> видалити</span>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div class="chk-row">
+        <label class="chk-label"><input type="checkbox" id="snapChk" checked> Привʼязка</label>
+        <label class="chk-label"><input type="checkbox" id="gridChk" checked> Сітка</label>
+      </div>
+      <div class="zc">
+        <button class="zb" onclick="zoom(-0.15)">−</button>
+        <span class="zlabel" id="zlbl">100%</span>
+        <button class="zb" onclick="zoom(0.15)">+</button>
+        <button class="zb" title="Скинути" onclick="resetZ()">⊙</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-bar" id="infoBar">
+    <div id="ibDot" style="width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
+    <span class="ib-name" id="ibName">—</span>
+    <span class="ib-pos">X:<b id="ibX">0</b>мм &nbsp;від підл:<b id="ibY">0</b>мм &nbsp;<b id="ibWH">—</b></span>
+    <div class="ib-actions">
+      <button class="rot-btn" onclick="rotSel()">↻ Повернути</button>
+      <button class="delbig" onclick="delSel()">✕ Видалити</button>
+    </div>
+  </div>
+
+  <div class="canvas-wrap" id="cwrap">
+    <div class="ruler-cont">
+      <div class="ruler-row">
+        <div style="width:20px;height:20px;background:var(--surface);border-right:1px solid var(--border);border-bottom:1px solid var(--border);flex-shrink:0"></div>
+        <canvas id="rH" height="20" style="display:block"></canvas>
+      </div>
+      <div class="ruler-row">
+        <canvas id="rV" width="20" style="display:block"></canvas>
+        <div id="wall" class="grid"></div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<script>
+const COLORS = ['#5b8fd4','#6ab04c','#f9ca24','#e55039','#8e44ad','#16a085','#d35400','#2980b9','#27ae60','#c0392b'];
+let selColor = COLORS[0];
+let items = [];
+let selId = null;
+let sc = 1, bs = 0.1;
+let wallW = 4000, wallH = 2400;
+let idN = 1;
+const SNAP = 50;
+
+// Color swatches
+const cr = document.getElementById('colorRow');
+COLORS.forEach(c => {
+  const s = document.createElement('div');
+  s.className = 'csw' + (c === selColor ? ' active' : '');
+  s.style.background = c;
+  s.onclick = () => { selColor = c; cr.querySelectorAll('.csw').forEach(x => x.classList.remove('active')); s.classList.add('active'); };
+  cr.appendChild(s);
+});
+
+document.getElementById('gridChk').onchange = e => document.getElementById('wall').classList.toggle('grid', e.target.checked);
+
+function getWall() { return document.getElementById('wall'); }
+
+function calcBS() {
+  const wrap = document.getElementById('cwrap');
+  const mw = wrap.clientWidth - 60;
+  const mh = wrap.clientHeight - 60;
+  return Math.min(mw / wallW, mh / wallH, 0.2);
+}
+
+function initWall() {
+  wallW = parseInt(document.getElementById('wW').value) || 4000;
+  wallH = parseInt(document.getElementById('wH').value) || 2400;
+  document.getElementById('hdims').textContent = wallW + ' × ' + wallH + ' мм';
+  applyLayout();
+  renderAll();
+  updateStats();
+}
+
+function applyLayout() {
+  bs = calcBS() * sc;
+  const wall = getWall();
+  wall.style.width = (wallW * bs) + 'px';
+  wall.style.height = (wallH * bs) + 'px';
+  document.getElementById('zlbl').textContent = Math.round(sc * 100) + '%';
+  const rH = document.getElementById('rH');
+  const rV = document.getElementById('rV');
+  rH.width = wallW * bs;
+  rV.height = wallH * bs;
+  drawRulers();
+}
+
+function drawRulers() {
+  const rH = document.getElementById('rH'), rV = document.getElementById('rV');
+  const ch = rH.getContext('2d'), cv = rV.getContext('2d');
+  ch.clearRect(0,0,rH.width,rH.height);
+  cv.clearRect(0,0,rV.width,rV.height);
+  ch.fillStyle = '#18181c'; ch.fillRect(0,0,rH.width,20);
+  cv.fillStyle = '#18181c'; cv.fillRect(0,0,20,rV.height);
+  [100,500].forEach((step,i) => {
+    const big = i===1;
+    for (let mm=0; mm<=wallW; mm+=step) {
+      const x = mm*bs;
+      ch.strokeStyle = big ? '#444' : '#2a2a33'; ch.lineWidth=1;
+      ch.beginPath(); ch.moveTo(x, big?0:12); ch.lineTo(x,20); ch.stroke();
+      if (big) { ch.fillStyle='#707088'; ch.font='9px DM Mono,monospace'; ch.textAlign='center'; ch.fillText(mm,x,10); }
+    }
+    for (let mm=0; mm<=wallH; mm+=step) {
+      const y = mm*bs;
+      cv.strokeStyle = big ? '#444' : '#2a2a33'; cv.lineWidth=1;
+      cv.beginPath(); cv.moveTo(big?0:12,y); cv.lineTo(20,y); cv.stroke();
+      if (big) { cv.save(); cv.fillStyle='#707088'; cv.font='9px DM Mono,monospace'; cv.translate(10,y); cv.rotate(-Math.PI/2); cv.textAlign='center'; cv.fillText(mm,0,3); cv.restore(); }
+    }
+  });
+}
+
+function zoom(d) { sc = Math.max(0.3, Math.min(3, sc + d)); applyLayout(); renderAll(); }
+function resetZ() { sc = 1; applyLayout(); renderAll(); }
+
+function snap(v) {
+  if (!document.getElementById('snapChk').checked) return v;
+  return Math.round(v / SNAP) * SNAP;
+}
+
+function addItem() {
+  const n = document.getElementById('fname').value.trim() || 'Елемент';
+  const fw = Math.min(parseInt(document.getElementById('fw').value)||600, wallW);
+  const fh = parseInt(document.getElementById('fh').value)||800;
+  const off = parseInt(document.getElementById('foff').value)||0;
+  const y = Math.max(0, Math.min(wallH - fh, wallH - fh - off));
+  items.push({ id: idN++, name: n, w: fw, h: Math.min(fh, wallH), x: 0, y, color: selColor });
+  renderAll(); renderList(); updateStats();
+}
+
+function renderAll() {
+  const wall = getWall();
+  wall.querySelectorAll('.fb').forEach(e => e.remove());
+  let es = wall.querySelector('.empty');
+  if (!es) {
+    es = document.createElement('div'); es.className='empty';
+    es.innerHTML='<div class="empty-icon">🪑</div><div class="empty-txt">Немає елементів.<br>Додайте перший зліва.</div>';
+    wall.appendChild(es);
+  }
+  es.classList.toggle('gone', items.length > 0);
+
+  items.forEach(f => {
+    const el = document.createElement('div');
+    el.className = 'fb' + (f.id === selId ? ' sel' : '');
+    el.style.left = (f.x*bs)+'px'; el.style.top = (f.y*bs)+'px';
+    el.style.width = (f.w*bs)+'px'; el.style.height = (f.h*bs)+'px';
+    el.style.background = f.color+'bb';
+    el.style.border = '1.5px solid '+f.color;
+    el.style.zIndex = f.id === selId ? 100 : f.id;
+    el.innerHTML = `<div class="fb-stripe"></div><div class="fb-lbl">${f.name}</div><div class="fb-dim">${f.w}×${f.h}</div><div class="rh-wrap"></div>`;
+    makeDrag(el, f);
+    makeResize(el.querySelector('.rh-wrap'), f);
+    el.addEventListener('click', e => { e.stopPropagation(); selectItem(f.id); });
+    wall.appendChild(el);
+  });
+}
+
+function selectItem(id) { selId = id; renderAll(); renderList(); updateInfoBar(); }
+
+function updateInfoBar() {
+  const bar = document.getElementById('infoBar');
+  const f = items.find(x => x.id === selId);
+  if (!f) { bar.classList.remove('vis'); return; }
+  bar.classList.add('vis');
+  document.getElementById('ibDot').style.background = f.color;
+  document.getElementById('ibName').textContent = f.name;
+  document.getElementById('ibX').textContent = f.x;
+  document.getElementById('ibY').textContent = wallH - f.h - f.y;
+  document.getElementById('ibWH').textContent = f.w+'×'+f.h+'мм';
+}
+
+function delSel() {
+  items = items.filter(x => x.id !== selId); selId = null;
+  renderAll(); renderList(); updateStats(); document.getElementById('infoBar').classList.remove('vis');
+}
+function rotSel() {
+  const f = items.find(x => x.id === selId); if (!f) return;
+  [f.w, f.h] = [f.h, f.w];
+  f.w = Math.min(f.w, wallW - f.x); f.h = Math.min(f.h, wallH - f.y);
+  renderAll(); updateInfoBar(); updateStats();
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.key==='r'||e.key==='R') && selId) rotSel();
+  if ((e.key==='Delete'||e.key==='Backspace') && selId) delSel();
+});
+getWall().addEventListener('click', () => { selId=null; renderAll(); renderList(); document.getElementById('infoBar').classList.remove('vis'); });
+
+function makeDrag(el, f) {
+  el.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('rh-wrap')) return;
+    e.preventDefault(); e.stopPropagation();
+    const sx=e.clientX, sy=e.clientY, ox=f.x, oy=f.y;
+    selectItem(f.id);
+    const mv = ev => {
+      let nx = ox+(ev.clientX-sx)/bs, ny = oy+(ev.clientY-sy)/bs;
+      f.x = Math.round(Math.max(0, Math.min(wallW-f.w, snap(nx))));
+      f.y = Math.round(Math.max(0, Math.min(wallH-f.h, snap(ny))));
+      el.style.left=(f.x*bs)+'px'; el.style.top=(f.y*bs)+'px';
+      updateInfoBar();
+    };
+    const up = () => { document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); renderAll(); };
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  });
+}
+
+function makeResize(handle, f) {
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation();
+    const sx=e.clientX, sy=e.clientY, ow=f.w, oh=f.h;
+    const mv = ev => {
+      f.w = Math.round(Math.max(100, Math.min(wallW-f.x, snap(ow+(ev.clientX-sx)/bs))));
+      f.h = Math.round(Math.max(100, Math.min(wallH-f.y, snap(oh+(ev.clientY-sy)/bs))));
+      const el = getWall().querySelector(`[data-id="${f.id}"]`) || handle.closest('.fb');
+      if (el) { el.style.width=(f.w*bs)+'px'; el.style.height=(f.h*bs)+'px'; el.querySelector('.fb-dim').textContent=f.w+'×'+f.h; }
+      updateInfoBar(); updateStats();
+    };
+    const up = () => { document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); renderAll(); };
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  });
+}
+
+function renderList() {
+  const list = document.getElementById('furList');
+  list.innerHTML = '';
+  document.getElementById('cnt').textContent = items.length;
+  items.forEach(f => {
+    const d = document.createElement('div');
+    d.className = 'fur-item' + (f.id===selId?' sel':'');
+    d.innerHTML = `<div style="display:flex;align-items:center"><div class="fi-dot" style="background:${f.color}"></div><div><div class="fi-name">${f.name}</div><div class="fi-dim">${f.w}×${f.h}мм</div></div></div><button class="del-btn" data-id="${f.id}">✕</button>`;
+    d.querySelector('.del-btn').onclick = e => { e.stopPropagation(); items=items.filter(x=>x.id!==f.id); if(selId===f.id){selId=null;document.getElementById('infoBar').classList.remove('vis');} renderAll();renderList();updateStats(); };
+    d.onclick = () => selectItem(f.id);
+    list.appendChild(d);
+  });
+}
+
+function updateStats() {
+  const wa = wallW*wallH, fa = items.reduce((s,f)=>s+f.w*f.h,0);
+  document.getElementById('sCount').textContent = items.length;
+  document.getElementById('sFill').textContent = wa>0 ? Math.round(fa/wa*100)+'%' : '0%';
+  document.getElementById('sFurA').textContent = Math.round(fa/10000);
+  document.getElementById('sWallA').textContent = Math.round(wa/10000);
+}
+
+window.addEventListener('load', () => {
+  initWall();
+  items = [
+    {id:idN++,name:'Шафа',w:800,h:2000,x:0,y:400,color:COLORS[0]},
+    {id:idN++,name:'Комод',w:1200,h:900,x:900,y:1500,color:COLORS[2]},
+    {id:idN++,name:'Антресоль',w:1200,h:400,x:900,y:0,color:COLORS[4]},
+  ];
+  renderAll(); renderList(); updateStats();
+  setTimeout(() => { applyLayout(); renderAll(); }, 80);
+});
+window.addEventListener('resize', () => { applyLayout(); renderAll(); });
+</script>
+</body>
+</html>
