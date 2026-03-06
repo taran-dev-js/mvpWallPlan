@@ -29,7 +29,7 @@
   .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
   .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
   .divider { height: 1px; background: var(--border); margin: 0 -20px; }
-  .fur-list { display: flex; flex-direction: column; gap: 7px; max-height: 200px; overflow-y: auto; }
+  .fur-list { display: flex; flex-direction: column; gap: 7px; overflow-y: auto; }
   .fur-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.15s; }
   .fur-item:hover, .fur-item.sel { border-color: var(--accent); }
   .fur-item.sel { background: #e8ff471a; }
@@ -132,7 +132,7 @@
     <div class="fur-list" id="furList"></div>
   </div>
   <div class="divider"></div>
-  <!-- <div>
+  <div style="display: none;">
     <div class="sec-label">📊 Статистика</div>
     <div class="stats">
       <div class="stat"><div class="sv" id="sCount">0</div><div class="sl">ЕЛЕМЕНТІВ</div></div>
@@ -140,7 +140,7 @@
       <div class="stat"><div class="sv" id="sFurA">0</div><div class="sl">ДМ² МЕБЛІВ</div></div>
       <div class="stat"><div class="sv" id="sWallA">0</div><div class="sl">ДМ² СТІНИ</div></div>
     </div>
-  </div> -->
+  </div>
 </aside>
 
 <main class="canvas-area">
